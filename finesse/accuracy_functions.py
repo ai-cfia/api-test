@@ -4,7 +4,7 @@ import csv
 import os
 from collections import namedtuple
 
-OUTPUT_FOLDER = "./api-test/output"
+OUTPUT_FOLDER = "./finesse/output"
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
 
 def calculate_accuracy(responses_url: list[str], expected_url: str) -> AccuracyResult:
