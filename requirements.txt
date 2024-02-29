@@ -1,2 +1,4 @@
 locust
-
+locust-plugins
+locust-plugins[dashboards]
+python-dotenv

@@ -52,7 +52,7 @@ to understand and use.
 ## Example Command
 
 ```cmd
-$locust -f finesse/finesse_test.py --engine azure --path finesse/QnA/good_question --host https://finesse-guidance.ninebasetwo.xyz/api --once
+$locust --config=finesse/finesse.conf --once --engine=azure --path=finesse/QnA/good_question --host=http://172.19.151.25:5000
 Searching with Azure Search...
 
 File: qna_2023-12-08_36.json

@@ -5,6 +5,12 @@ AI Lab projects.
 
 ## Usage
 
+For each project, it is necessary to create a specific configuration file for
+Locust, named `<project_name>.conf`. This file should contain the secrets of the
+project's database. Make sure to include the file into the `.gitignore` to
+protect sensitive information. For more information on what to include in the
+`.conf` file, you can refer to the `<project_name>.conf.template`.
+
 For more detailed information about the usage of Finesse locust tool, please
 refer to the [FINESSE_USAGE.md](finesse/FINESSE_USAGE.md) file in the finesse
 repository.

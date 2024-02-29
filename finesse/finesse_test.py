@@ -23,6 +23,11 @@ def _(parser):
     if not is_host_up(args.host):
        parser.error(f"The backend URL '{args.host}' is either wrong or down.")
 
+    print("PGUSER WAS:", args.pguser)
+    args.pgport=5432
+    args.pgpassword="password"
+    args.pguser="postgres"
+    print("PGUSER IS:", args.pguser)
 class FinesseUser(HttpUser):
 
     @task()

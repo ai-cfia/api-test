@@ -45,3 +45,6 @@ QnA
 
 # Ignore output of api-test
 output
+
+# Ignore secrets
+finesse.conf
