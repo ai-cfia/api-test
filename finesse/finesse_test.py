@@ -1,4 +1,5 @@
-from locust import HttpUser, task, events
+from locust import HttpUser, task, events, stats
+
 from jsonreader import JSONReader
 import os
 import json
@@ -73,6 +74,16 @@ class FinesseUser(HttpUser):
                     "accuracy": accuracy_result.score,
                     "time": time_taken,
                 }
+
+    @events.request.add_listener
+    def on_request(self, request_type, name, response_time, response_length, exception, context, **kwargs):
+        """
+        Event handler that get triggered on every request.
+        """
+        print(self.environment.stats.current_run.id)
+        print("Request type:", request_type)
+        print("Name:",name)
+        print("Response time:", response_time)
 
     def on_start(self):
         self.qna_reader = JSONReader(self.path)
