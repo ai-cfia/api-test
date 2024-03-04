@@ -1,5 +1,5 @@
 import unittest
-from accuracy_functions import calculate_accuracy
+from finesse.accuracy_functions import calculate_accuracy
 
 class TestFunctions(unittest.TestCase):
 
