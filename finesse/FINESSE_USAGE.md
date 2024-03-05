@@ -1,4 +1,4 @@
-# Design of the Finesse Benchmark Tool
+# How to use the Finesse Locust script
 
 This tool simplifies the process of comparing different search engines and
 assessing their accuracy. It's designed to be straightforward, making it easy
@@ -47,7 +47,27 @@ to understand and use.
 
 ## Diagram
 
-![Alt text](diagram.png)
+```mermaid
+sequenceDiagram
+  participant User
+  participant finesse-test
+  participant finesse-backend
+  participant Output
+  User->>finesse-test: Enter command
+  loop Each json files
+      finesse-test->>finesse-backend: POST /search
+      finesse-backend-->>finesse-test: Return documents
+      finesse-test->>finesse-test: Measure round trip time
+      finesse-test->>finesse-test: Caculate accuracy score
+  end
+  finesse-test->>finesse-test: Calculate statistical summary
+  alt md:default
+      finesse-test-->>Output: Save data in markdown file
+  else csv
+      finesse-test-->>Output: Save data in csv file
+  end
+  finesse-test-->>User: Display results
+```
 
 ## Example Command
 
