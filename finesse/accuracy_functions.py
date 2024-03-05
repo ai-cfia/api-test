@@ -12,8 +12,6 @@ def calculate_accuracy(responses_url: list[str], expected_url: str) -> AccuracyR
     position: int = 0
     total_pages: int = len(responses_url)
     score: float = 0.0
-    print("URL", expected_url)
-    print("Number",int(re.findall(r'/(\d+)/', expected_url)[0]))
     expected_number = int(re.findall(r'/(\d+)/', expected_url)[0])
 
     for idx, response_url in enumerate(responses_url):
