@@ -1,7 +1,7 @@
 # Testing
 
-Modify the project_folder by the project your testing, such as "finesse" and run:
+Run:
 
 ```cmd
-python -m unittest discover -s project_folder/tests
+python -m unittest discover -s tests
 ```
