@@ -1,0 +1,16 @@
+# Default settings of locust
+
+# Run the test without the web UI
+headless = true
+
+# Save the data to the postgres database
+timescale = true
+
+# Locust file path
+locustfile = finesse/finesse_test.py
+
+pghost=
+pgname=
+pguser=
+pgpassword=
+pgport=
