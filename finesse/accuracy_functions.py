@@ -19,7 +19,7 @@ def calculate_accuracy(responses_url: list[str], expected_url: str) -> AccuracyR
         if response_number == expected_number:
             position = idx
             score = 1 - (position / total_pages)
-            score= round(score, 2)
+            score = round(score, 2)
             break
 
     return AccuracyResult(position, total_pages, score)
@@ -36,7 +36,7 @@ def save_to_markdown(test_data: dict, engine: str):
         md_file.write("| 📄 File               | 💬 Question                                                                                                                | 📏 Accuracy Score | ⌛ Time     |\n")
         md_file.write("|--------------------|-------------------------------------------------------------------------------------------------------------------------|----------------|----------|\n")
         for key, value in test_data.items():
-            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')})' | {value.get('accuracy')*100:.1f}% | {value.get('time')}ms |\n")
+            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100:.0f}% | {int(value.get('time'))}ms |\n")
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
@@ -44,11 +44,12 @@ def save_to_markdown(test_data: dict, engine: str):
         md_file.write("## Statistical summary\n\n")
         md_file.write("| Statistic             | Time       | Accuracy score|\n")
         md_file.write("|-----------------------|------------|---------|\n")
-        md_file.write(f"|Mean| {time_stats.get('Mean')}ms | {accuracy_stats.get('Mean')*100}% |\n")
-        md_file.write(f"|Median| {time_stats.get('Median')}ms | {accuracy_stats.get('Median')*100}% |\n")
-        md_file.write(f"|Standard Deviation| {time_stats.get('Standard Deviation')}ms | {accuracy_stats.get('Standard Deviation')*100}% |\n")
-        md_file.write(f"|Maximum| {time_stats.get('Maximum')}ms | {accuracy_stats.get('Maximum')*100}% |\n")
-        md_file.write(f"|Minimum| {time_stats.get('Minimum')}ms | {accuracy_stats.get('Minimum')*100}% |\n")
+        md_file.write(f"|Mean| {int(time_stats.get('Mean'))}ms | {int(accuracy_stats.get('Mean')*100)}% |\n")
+        md_file.write(f"|Median| {int(time_stats.get('Median'))}ms | {int(accuracy_stats.get('Median')*100)}% |\n")
+        md_file.write(f"|Standard Deviation| {int(time_stats.get('Standard Deviation'))}ms | {int(accuracy_stats.get('Standard Deviation')*100)}% |\n")
+        md_file.write(f"|Maximum| {int(time_stats.get('Maximum'))}ms | {int(accuracy_stats.get('Maximum')*100)}% |\n")
+        md_file.write(f"|Minimum| {int(time_stats.get('Minimum'))}ms | {int(accuracy_stats.get('Minimum')*100)}% |\n")
+        md_file.write(f"\nThere are a total of {len([result.get('accuracy') for result in test_data.values() if result.get('accuracy') == 0])} null scores\n")
 
 def save_to_csv(test_data: dict, engine: str):
     if not os.path.exists(OUTPUT_FOLDER):
@@ -64,35 +65,35 @@ def save_to_csv(test_data: dict, engine: str):
                 key,
                 value.get("question"),
                 f"{value.get('accuracy')}",
-                f"{value.get('time')}"
+                f"{int(value.get('time'))}"
             ])
         writer.writerow([])
 
         time_stats, accuracy_stats = calculate_statistical_summary(test_data)
         writer.writerow(["Statistic", "Time", "Accuracy Score"])
-        writer.writerow(["Mean", f"{time_stats.get('Mean')}", f"{accuracy_stats.get('Mean')}"])
-        writer.writerow(["Median", f"{time_stats.get('Median')}", f"{accuracy_stats.get('Median')}"])
-        writer.writerow(["Standard Deviation", f"{time_stats.get('Standard Deviation')}", f"{accuracy_stats.get('Standard Deviation')}"])
-        writer.writerow(["Maximum", f"{time_stats.get('Maximum')}", f"{accuracy_stats.get('Maximum')}"])
-        writer.writerow(["Minimum", f"{time_stats.get('Minimum')}", f"{accuracy_stats.get('Minimum')}"])
+        writer.writerow(["Mean", f"{int(time_stats.get('Mean'))}", f"{int(accuracy_stats.get('Mean'))}"])
+        writer.writerow(["Median", f"{int(time_stats.get('Median'))}", f"{int(accuracy_stats.get('Median'))}"])
+        writer.writerow(["Standard Deviation", f"{int(time_stats.get('Standard Deviation'))}", f"{int(accuracy_stats.get('Standard Deviation'))}"])
+        writer.writerow(["Maximum", f"{int(time_stats.get('Maximum'))}", f"{int(accuracy_stats.get('Maximum'))}"])
+        writer.writerow(["Minimum", f"{int(time_stats.get('Minimum'))}", f"{int(accuracy_stats.get('Minimum'))}"])
 
 def log_data(test_data: dict):
     for key, value in test_data.items():
         print("File:", key)
         print("Question:", value.get("question"))
         print("Expected URL:", value.get("expected_page").get("url"))
-        print(f'Accuracy Score: {value.get("accuracy")*100}%')
-        print(f'Time: {value.get("time")}ms')
+        print(f'Accuracy Score: {int(value.get("accuracy")*100)}%')
+        print(f'Time: {int(value.get("time"))}ms')
         print()
     time_stats, accuracy_stats = calculate_statistical_summary(test_data)
     print("---")
     print(f"Tested on {len(test_data)} files.")
     print("Time statistical summary:", end="\n  ")
     for key,value in time_stats.items():
-        print(f"{key}:{value},", end=' ')
+        print(f"{key}:{int(value)},", end=' ')
     print("\nAccuracy statistical summary:", end="\n  ")
     for key,value in accuracy_stats.items():
-        print(f"{key}:{value*100}%,", end=' ')
+        print(f"{key}:{int(value*100)}%,", end=' ')
     print("\n---")
 
 
