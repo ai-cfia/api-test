@@ -30,14 +30,22 @@ class FinesseUser(HttpUser):
     def search_accuracy(self):
         try:
             json_data = next(self.qna_reader)
+<<<<<<< HEAD
             while json_data.get("skip") is True:
+=======
+            while json_data.get("skip") == True:
+>>>>>>> 678518b (issue #7: Removed punction mark on md files, added total number of 0, better rounding, sorted json files)
                 json_data = next(self.qna_reader)
         except StopIteration:
             if not self.once:
                 # Reset variables
                 self.on_start()
                 json_data = next(self.qna_reader)
+<<<<<<< HEAD
                 while json_data.get("skip") is True:
+=======
+                while json_data.get("skip") == True:
+>>>>>>> 678518b (issue #7: Removed punction mark on md files, added total number of 0, better rounding, sorted json files)
                     json_data = next(self.qna_reader)
                 print("Restarting the running test")
             else:
