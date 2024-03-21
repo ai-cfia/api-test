@@ -72,7 +72,7 @@ sequenceDiagram
 ## Example Command
 
 ```cmd
-$locust -f finesse/finesse_test.py --engine azure --path finesse/QnA/good_question --host https://finesse-guidance.ninebasetwo.xyz/api --once
+$locust -f finesse/finesse_test.py --engine azure --path finesse/QnA/sorted-2024-02-22/  --host https://finesse.inspection.alpha.canada.ca/api --once
 Searching with Azure Search...
 
 File: qna_2023-12-08_36.json
