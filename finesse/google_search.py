@@ -1,8 +1,7 @@
-from googleapi import google
+from googlesearch import search
 
 def get_google_search_urls(query: str, num_results: int = 100) -> list[str]:
     links = []
-    search_results = google.search(query, num_results)
-    print(search_results[0].google_link )
-    links.append(search_results[0].google_link )
+    for url in search(query, num_results, sleep_interval=1):
+        links.append(url)
     return links
