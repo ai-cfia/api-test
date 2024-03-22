@@ -15,12 +15,13 @@ def calculate_accuracy(responses_url: list[str], expected_url: str) -> AccuracyR
     expected_number = int(re.findall(r'/(\d+)/', expected_url)[0])
 
     for idx, response_url in enumerate(responses_url):
-        response_number = int(re.findall(r'/(\d+)/', response_url)[0])
-        if response_number == expected_number:
-            position = idx
-            score = 1 - (position / total_pages)
-            score = round(score, 2)
-            break
+        if response_url.startswith("https://inspection.canada.ca"):
+            response_number = int(re.findall(r'/(\d+)/', response_url)[0])
+            if response_number == expected_number:
+                position = idx
+                score = 1 - (position / total_pages)
+                score= round(score, 2)
+                break
 
     return AccuracyResult(position, total_pages, score)
 
