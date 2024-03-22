@@ -4,6 +4,7 @@ import os
 import json
 from accuracy_functions import save_to_markdown, save_to_csv, log_data, calculate_accuracy
 from host import is_host_up
+from google_search import get_google_search_urls
 
 class NoTestDataError(Exception):
     """Raised when all requests have failed and there is no test data"""
@@ -54,6 +55,8 @@ class FinesseUser(HttpUser):
                 for page in response_pages:
                     response_url.append(page.get("url"))
                 accuracy_result = calculate_accuracy(response_url, expected_url)
+                google_response_url = get_google_search_urls(question)
+                google_accuracy_result = calculate_accuracy(google_response_url, expected_url)
                 time_taken = round(response.elapsed.microseconds/1000,3)
 
                 expected_page = json_data.copy()
@@ -66,6 +69,7 @@ class FinesseUser(HttpUser):
                     "position": accuracy_result.position,
                     "total_pages": accuracy_result.total_pages,
                     "accuracy": accuracy_result.score,
+                    "google_accuracy": google_accuracy_result,
                     "time": time_taken,
                 }
 
