@@ -4,6 +4,7 @@ import csv
 import os
 from collections import namedtuple
 import regex as re
+from finesse.google_search import search_google_urls
 
 OUTPUT_FOLDER = "./finesse/output"
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
@@ -34,22 +35,22 @@ def save_to_markdown(test_data: dict, engine: str):
     with open(output_file, "w") as md_file:
         md_file.write(f"# Test on the {engine} search engine: {date_string}\n\n")
         md_file.write("## Test data table\n\n")
-        md_file.write("| 📄 File               | 💬 Question                                                                                                                | 📏 Accuracy Score | ⌛ Time     |\n")
+        md_file.write("| 📄 File               | 💬 Question                                                                                                                | 📏 Accuracy Score | 🌐 Google Score |⌛ Time     |\n")
         md_file.write("|--------------------|-------------------------------------------------------------------------------------------------------------------------|----------------|----------|\n")
         for key, value in test_data.items():
-            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100}% | {int(value.get('time'))}ms |\n")
+            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100}% | {value.get('google_accuracy')*100}% |{int(value.get('time'))}ms |\n")
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
-        time_stats, accuracy_stats = calculate_statistical_summary(test_data)
+        time_stats, accuracy_stats, google_stats = calculate_statistical_summary(test_data)
         md_file.write("## Statistical summary\n\n")
-        md_file.write("| Statistic             | Time       | Accuracy score|\n")
+        md_file.write("| Statistic             | ⌛ Time       | 📏 Accuracy score| 🌐 Google Score |\n")
         md_file.write("|-----------------------|------------|---------|\n")
-        md_file.write(f"|Mean| {int(time_stats.get('Mean'))}ms | {int(accuracy_stats.get('Mean')*100)}% |\n")
-        md_file.write(f"|Median| {int(time_stats.get('Median'))}ms | {int(accuracy_stats.get('Median')*100)}% |\n")
-        md_file.write(f"|Standard Deviation| {int(time_stats.get('Standard Deviation'))}ms | {int(accuracy_stats.get('Standard Deviation')*100)}% |\n")
-        md_file.write(f"|Maximum| {int(time_stats.get('Maximum'))}ms | {int(accuracy_stats.get('Maximum')*100)}% |\n")
-        md_file.write(f"|Minimum| {int(time_stats.get('Minimum'))}ms | {int(accuracy_stats.get('Minimum')*100)}% |\n")
+        md_file.write(f"|Mean| {int(time_stats.get('Mean'))}ms | {int(accuracy_stats.get('Mean')*100)}% |{int(google_stats.get('Mean')*100)}% |\n")
+        md_file.write(f"|Median| {int(time_stats.get('Median'))}ms | {int(accuracy_stats.get('Median')*100)}% | {int(google_stats.get('Median')*100)}% |\n")
+        md_file.write(f"|Standard Deviation| {int(time_stats.get('Standard Deviation'))}ms | {int(accuracy_stats.get('Standard Deviation')*100)}% | {int(google_stats.get('Standard Deviation')*100)}% |\n")
+        md_file.write(f"|Maximum| {int(time_stats.get('Maximum'))}ms | {int(accuracy_stats.get('Maximum')*100)}% | {int(google_stats.get('Maximum')*100)}% |\n")
+        md_file.write(f"|Minimum| {int(time_stats.get('Minimum'))}ms | {int(accuracy_stats.get('Minimum')*100)}% | {int(google_stats.get('Minimum')*100)}% |\n")
         md_file.write(f"\nThere are a total of {len([result.get('accuracy') for result in test_data.values() if result.get('accuracy') == 0])} null scores\n")
 
 def save_to_csv(test_data: dict, engine: str):
@@ -101,6 +102,7 @@ def log_data(test_data: dict):
 def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict]:
     times = [result.get("time") for result in test_data.values()]
     accuracies = [result.get("accuracy") for result in test_data.values()]
+    google = [result.get("google_accuracy") for result in test_data.values()]
     time_stats = {
         "Mean": round(statistics.mean(times), 3),
         "Median": round(statistics.median(times), 3),
@@ -115,4 +117,29 @@ def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict]:
         "Maximum": round(max(accuracies), 2),
         "Minimum": round(min(accuracies), 2),
     }
-    return time_stats, accuracy_stats
+    google_stats= {
+        "Mean": round(statistics.mean(google), 2),
+        "Median": round(statistics.median(google), 2),
+        "Standard Deviation": round(statistics.stdev(google), 2),
+        "Maximum": round(max(google), 2),
+        "Minimum": round(min(google), 2),
+    }
+    return time_stats, accuracy_stats, google_stats
+
+def update_dict_google_data(test_data: dict):
+    """
+    Updates the given test_data dictionary with the Google accuracy results.
+
+    Args:
+        test_data (dict): The dictionary containing the test data.
+    """
+    count = 0
+    for key, value in test_data.items():
+        question = value.get("question")
+        expected_url = value.get("expected_page").get("url")
+        top = value.get("top")
+        google_response_url = search_google_urls(question, top)
+        google_accuracy_result = calculate_accuracy(google_response_url, expected_url)
+        value["google_accuracy"] = google_accuracy_result.score
+        count += 1
+        print(f"{count} file is done")

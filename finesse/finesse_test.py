@@ -2,9 +2,8 @@ from locust import HttpUser, task, events
 from jsonreader import JSONReader
 import os
 import json
-from accuracy_functions import save_to_markdown, save_to_csv, log_data, calculate_accuracy
+from accuracy_functions import save_to_markdown, save_to_csv, log_data, calculate_accuracy, update_dict_google_data
 from host import is_host_up
-from google_search import get_google_search_urls
 
 class NoTestDataError(Exception):
     """Raised when all requests have failed and there is no test data"""
@@ -67,8 +66,6 @@ class FinesseUser(HttpUser):
                 for page in response_pages:
                     response_url.append(page.get("url"))
                 accuracy_result = calculate_accuracy(response_url, expected_url)
-                google_response_url = get_google_search_urls(question)
-                google_accuracy_result = calculate_accuracy(google_response_url, expected_url)
                 time_taken = round(response.elapsed.microseconds/1000,3)
 
                 expected_page = json_data.copy()
@@ -81,8 +78,8 @@ class FinesseUser(HttpUser):
                     "position": accuracy_result.position,
                     "total_pages": accuracy_result.total_pages,
                     "accuracy": accuracy_result.score,
-                    "google_accuracy": google_accuracy_result,
                     "time": time_taken,
+                    "top": self.top
                 }
 
     def on_start(self):
@@ -93,6 +90,10 @@ class FinesseUser(HttpUser):
         if not self.qna_results:
             raise NoTestDataError
 
+        print("Search accuracy test completed")
+        print("Starting google search test")
+
+        update_dict_google_data(self.qna_results)
         log_data(self.qna_results)
         if self.format == "md":
             save_to_markdown(self.qna_results, self.engine)
