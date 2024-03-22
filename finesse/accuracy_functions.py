@@ -37,7 +37,7 @@ def save_to_markdown(test_data: dict, engine: str):
         md_file.write("| 📄 File               | 💬 Question                                                                                                                | 📏 Accuracy Score | ⌛ Time     |\n")
         md_file.write("|--------------------|-------------------------------------------------------------------------------------------------------------------------|----------------|----------|\n")
         for key, value in test_data.items():
-            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100:.0f}% | {int(value.get('time'))}ms |\n")
+            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100}% | {int(value.get('time'))}ms |\n")
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
