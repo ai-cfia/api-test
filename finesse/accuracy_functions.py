@@ -4,7 +4,7 @@ import csv
 import os
 from collections import namedtuple
 import regex as re
-from finesse.google_search import search_google_urls
+from finesse.bing_search import search_bing_urls
 
 OUTPUT_FOLDER = "./finesse/output"
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
@@ -138,7 +138,7 @@ def update_dict_google_data(test_data: dict):
         question = value.get("question")
         expected_url = value.get("expected_page").get("url")
         top = value.get("top")
-        google_response_url = search_google_urls(question, top)
+        google_response_url = search_bing_urls(question, top)
         google_accuracy_result = calculate_accuracy(google_response_url, expected_url)
         value["google_accuracy"] = google_accuracy_result.score
         count += 1
