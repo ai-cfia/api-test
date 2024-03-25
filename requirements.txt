@@ -1,4 +1,3 @@
 locust
 regex
-google-api-python-client
 python-dotenv
