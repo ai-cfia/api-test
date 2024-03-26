@@ -4,7 +4,8 @@ import csv
 import os
 from collections import namedtuple
 import regex as re
-from finesse.bing_search import search_bing_urls
+from finesse.bing_search import BingSearch
+from dotenv import load_dotenv
 
 OUTPUT_FOLDER = "./finesse/output"
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
@@ -17,12 +18,15 @@ def calculate_accuracy(responses_url: list[str], expected_url: str) -> AccuracyR
 
     for idx, response_url in enumerate(responses_url):
         if response_url.startswith("https://inspection.canada.ca"):
-            response_number = int(re.findall(r'/(\d+)/', response_url)[0])
-            if response_number == expected_number:
-                position = idx
-                score = 1 - (position / total_pages)
-                score= round(score, 2)
-                break
+            try:
+                response_number = int(re.findall(r'/(\d+)/', response_url)[0])
+                if response_number == expected_number:
+                    position = idx
+                    score = 1 - (position / total_pages)
+                    score= round(score, 2)
+                    break
+            except IndexError:
+                pass
 
     return AccuracyResult(position, total_pages, score)
 
@@ -35,23 +39,35 @@ def save_to_markdown(test_data: dict, engine: str):
     with open(output_file, "w") as md_file:
         md_file.write(f"# Test on the {engine} search engine: {date_string}\n\n")
         md_file.write("## Test data table\n\n")
-        md_file.write("| 📄 File               | 💬 Question                                                                                                                | 📏 Accuracy Score | 🌐 Google Score |⌛ Time     |\n")
-        md_file.write("|--------------------|-------------------------------------------------------------------------------------------------------------------------|----------------|----------|\n")
+        md_file.write("| 📄 File | 💬 Question| 🔎 Finesse Accuracy Score | 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛ Finesse Time | ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+        md_file.write("|---|---|---|---|---|---|---|---|\n")
         for key, value in test_data.items():
-            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {value.get('accuracy')*100}% | {value.get('google_accuracy')*100}% |{int(value.get('time'))}ms |\n")
+            md_file.write(f"| {key} | [{value.get('question')}]({value.get('expected_page').get('url')}) | {int(value.get('accuracy')*100)}% | {int(value.get('bing_accuracy')*100)}% |{int(value.get('bing_filtered_accuracy')*100)}% |{int(value.get('time'))}ms | {int(value.get('bing_time'))}ms | {int(value.get('bing_filtered_time'))}ms |\n")
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
-        time_stats, accuracy_stats, google_stats = calculate_statistical_summary(test_data)
+        time_stats, accuracy_stats, bing_accuracy_stats, bing_time_stats, bing_filtered_accuracy_stats, bing_filtered_time_stats = calculate_statistical_summary(test_data)
         md_file.write("## Statistical summary\n\n")
-        md_file.write("| Statistic             | ⌛ Time       | 📏 Accuracy score| 🌐 Google Score |\n")
-        md_file.write("|-----------------------|------------|---------|\n")
-        md_file.write(f"|Mean| {int(time_stats.get('Mean'))}ms | {int(accuracy_stats.get('Mean')*100)}% |{int(google_stats.get('Mean')*100)}% |\n")
-        md_file.write(f"|Median| {int(time_stats.get('Median'))}ms | {int(accuracy_stats.get('Median')*100)}% | {int(google_stats.get('Median')*100)}% |\n")
-        md_file.write(f"|Standard Deviation| {int(time_stats.get('Standard Deviation'))}ms | {int(accuracy_stats.get('Standard Deviation')*100)}% | {int(google_stats.get('Standard Deviation')*100)}% |\n")
-        md_file.write(f"|Maximum| {int(time_stats.get('Maximum'))}ms | {int(accuracy_stats.get('Maximum')*100)}% | {int(google_stats.get('Maximum')*100)}% |\n")
-        md_file.write(f"|Minimum| {int(time_stats.get('Minimum'))}ms | {int(accuracy_stats.get('Minimum')*100)}% | {int(google_stats.get('Minimum')*100)}% |\n")
-        md_file.write(f"\nThere are a total of {len([result.get('accuracy') for result in test_data.values() if result.get('accuracy') == 0])} null scores\n")
+        md_file.write("| Statistic\Engine | 🔎 Finesse Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛  Finesse Time |  ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+        md_file.write("|---|---|---|---|---|---|---|\n")
+        for stat in ["Mean", "Median", "Standard Deviation", "Maximum", "Minimum"]:
+            md_file.write(f"|{stat}| {accuracy_stats.get(stat)}% | {bing_accuracy_stats.get(stat)}% | {bing_filtered_accuracy_stats.get(stat)}% |{time_stats.get(stat)}ms | {bing_time_stats.get(stat)}ms | {bing_filtered_time_stats.get(stat)}ms |\n")
+
+        md_file.write("\n## Count of null and top scores\n\n")
+        md_file.write("| Score\Engine | 🔎 Finesse Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |\n")
+        md_file.write("|---|---|---|---|\n")
+        finesse_null, finesse_top = count_null_top_scores({key: value.get("accuracy") for key, value in test_data.items()})
+        bing_null, bing_top = count_null_top_scores({key: value.get("bing_accuracy") for key, value in test_data.items()})
+        bing_filtered_null, bing_filtered_top = count_null_top_scores({key: value.get("bing_filtered_accuracy") for key, value in test_data.items()})
+
+        md_file.write(f"| Null (0%) | {finesse_null} | {bing_null} |{bing_filtered_null} |\n")
+        md_file.write(f"| Top (100%)| {finesse_top} | {bing_top} |{bing_filtered_top} |\n")
+
+def count_null_top_scores(accuracy_scores: dict):
+    null_scores = len([score for score in accuracy_scores.values() if score == 0])
+    top_scores = len([score for score in accuracy_scores.values() if score == 1])
+
+    return null_scores, top_scores
 
 def save_to_csv(test_data: dict, engine: str):
     if not os.path.exists(OUTPUT_FOLDER):
@@ -71,7 +87,7 @@ def save_to_csv(test_data: dict, engine: str):
             ])
         writer.writerow([])
 
-        time_stats, accuracy_stats = calculate_statistical_summary(test_data)
+        time_stats, accuracy_stats, bing_stats = calculate_statistical_summary(test_data)
         writer.writerow(["Statistic", "Time", "Accuracy Score"])
         writer.writerow(["Mean", f"{int(time_stats.get('Mean'))}", f"{int(accuracy_stats.get('Mean'))}"])
         writer.writerow(["Median", f"{int(time_stats.get('Median'))}", f"{int(accuracy_stats.get('Median'))}"])
@@ -79,67 +95,77 @@ def save_to_csv(test_data: dict, engine: str):
         writer.writerow(["Maximum", f"{int(time_stats.get('Maximum'))}", f"{int(accuracy_stats.get('Maximum'))}"])
         writer.writerow(["Minimum", f"{int(time_stats.get('Minimum'))}", f"{int(accuracy_stats.get('Minimum'))}"])
 
-def log_data(test_data: dict):
-    for key, value in test_data.items():
-        print("File:", key)
-        print("Question:", value.get("question"))
-        print("Expected URL:", value.get("expected_page").get("url"))
-        print(f'Accuracy Score: {int(value.get("accuracy")*100)}%')
-        print(f'Time: {int(value.get("time"))}ms')
-        print()
-    time_stats, accuracy_stats = calculate_statistical_summary(test_data)
-    print("---")
-    print(f"Tested on {len(test_data)} files.")
-    print("Time statistical summary:", end="\n  ")
-    for key,value in time_stats.items():
-        print(f"{key}:{int(value)},", end=' ')
-    print("\nAccuracy statistical summary:", end="\n  ")
-    for key,value in accuracy_stats.items():
-        print(f"{key}:{int(value*100)}%,", end=' ')
-    print("\n---")
+def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict, dict, dict, dict, dict]:
+    def calculate_stats(data: list) -> dict:
+        stats = {
+            "Mean": statistics.mean(data),
+            "Median": statistics.median(data),
+            "Standard Deviation": statistics.stdev(data),
+            "Maximum": max(data),
+            "Minimum": min(data),
+        }
+        return stats
 
+    def round_values(stats: dict) -> dict:
+        return {key: int(round(value, 3)) for key, value in stats.items()}
 
-def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict]:
+    def convert_to_percentage(stats: dict) -> dict:
+        return {key: int(round(value * 100, 2)) for key, value in stats.items()}
+
     times = [result.get("time") for result in test_data.values()]
     accuracies = [result.get("accuracy") for result in test_data.values()]
-    google = [result.get("google_accuracy") for result in test_data.values()]
-    time_stats = {
-        "Mean": round(statistics.mean(times), 3),
-        "Median": round(statistics.median(times), 3),
-        "Standard Deviation": round(statistics.stdev(times), 3),
-        "Maximum": round(max(times), 3),
-        "Minimum": round(min(times), 3),
-    }
-    accuracy_stats = {
-        "Mean": round(statistics.mean(accuracies), 2),
-        "Median": round(statistics.median(accuracies), 2),
-        "Standard Deviation": round(statistics.stdev(accuracies), 2),
-        "Maximum": round(max(accuracies), 2),
-        "Minimum": round(min(accuracies), 2),
-    }
-    google_stats= {
-        "Mean": round(statistics.mean(google), 2),
-        "Median": round(statistics.median(google), 2),
-        "Standard Deviation": round(statistics.stdev(google), 2),
-        "Maximum": round(max(google), 2),
-        "Minimum": round(min(google), 2),
-    }
-    return time_stats, accuracy_stats, google_stats
+    bing_accuracies = [result.get("bing_accuracy") for result in test_data.values()]
+    bing_times = [result.get("bing_time") for result in test_data.values()]
+    bing_filtered_accuracies = [result.get("bing_filtered_accuracy") for result in test_data.values()]
+    bing_filtered_times = [result.get("bing_filtered_time") for result in test_data.values()]
 
-def update_dict_google_data(test_data: dict):
+    time_stats = calculate_stats(times)
+    accuracy_stats = calculate_stats(accuracies)
+    bing_accuracy_stats = calculate_stats(bing_accuracies)
+    bing_times_stats = calculate_stats(bing_times)
+    bing_filtered_accuracy_stats = calculate_stats(bing_filtered_accuracies)
+    bing_filtered_times_stats = calculate_stats(bing_filtered_times)
+
+    time_stats = round_values(time_stats)
+    bing_times_stats = round_values(bing_times_stats)
+    bing_filtered_times_stats = round_values(bing_filtered_times_stats)
+    bing_accuracy_stats = convert_to_percentage(bing_accuracy_stats)
+    accuracy_stats = convert_to_percentage(accuracy_stats)
+    bing_filtered_accuracy_stats = convert_to_percentage(bing_filtered_accuracy_stats)
+
+    return time_stats, accuracy_stats, bing_accuracy_stats, bing_times_stats, bing_filtered_accuracy_stats, bing_filtered_times_stats
+
+def update_dict_bing_data(test_data: dict):
     """
-    Updates the given test_data dictionary with the Google accuracy results.
+    Updates the given test_data dictionary with the bing accuracy results.
 
     Args:
         test_data (dict): The dictionary containing the test data.
     """
-    count = 0
+    load_dotenv()
+    endpoint = os.getenv("BING_ENDPOINT")
+    subscription_key = os.getenv("BING_SEARCH_KEY")
+    search_engine = BingSearch(endpoint, subscription_key)
+    count = 1
     for key, value in test_data.items():
         question = value.get("question")
         expected_url = value.get("expected_page").get("url")
         top = value.get("top")
-        google_response_url = search_bing_urls(question, top)
-        google_accuracy_result = calculate_accuracy(google_response_url, expected_url)
-        value["google_accuracy"] = google_accuracy_result.score
+        response_url, time_elapsed = search_engine.search_urls(question, top)
+        accuracy_result = calculate_accuracy(response_url, expected_url)
+        value["bing_accuracy"] = accuracy_result.score
+        value["bing_time"] = time_elapsed
+        print(f"{count} files are done")
         count += 1
-        print(f"{count} file is done")
+
+    count = 1
+    for key, value in test_data.items():
+        question = f"site:inspection.canada.ca {value.get('question')}"
+        expected_url = value.get("expected_page").get("url")
+        top = value.get("top")
+        response_url, time_elapsed = search_engine.search_urls(question, top)
+        accuracy_result = calculate_accuracy(response_url, expected_url)
+        value["bing_filtered_accuracy"] = accuracy_result.score
+        value["bing_filtered_time"] = time_elapsed
+        print(f"{count} files are done")
+        count += 1
