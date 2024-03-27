@@ -34,6 +34,9 @@ class BingSearch():
             elapsed_time.append(time.time() - start_time)
             if hasattr(web_data, 'web_pages') and web_data.web_pages is not None:
                 urls.extend([item.url for item in web_data.web_pages.value])
-            offset += len([item.url for item in web_data.web_pages.value])
+            try:
+                offset += len([item.url for item in web_data.web_pages.value])
+            except AttributeError:
+                break
         urls = urls[:num_results]
         return urls, statistics.mean(elapsed_time) * 1000
