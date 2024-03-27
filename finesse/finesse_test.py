@@ -6,6 +6,7 @@ from accuracy_functions import save_to_markdown, save_to_csv, calculate_accuracy
 from host import is_host_up
 
 global_test_data = dict()
+settings = dict()
 class NoTestDataError(Exception):
     """Raised when all requests have failed and there is no test data"""
 
@@ -60,7 +61,6 @@ class FinesseUser(HttpUser):
                     response_url.append(page.get("url"))
                 accuracy_result = calculate_accuracy(response_url, expected_url)
                 time_taken = round(response.elapsed.total_seconds()*1000,3)
-
                 expected_page = json_data.copy()
                 del expected_page['question']
                 del expected_page['answer']
@@ -72,7 +72,7 @@ class FinesseUser(HttpUser):
                     "total_pages": accuracy_result.total_pages,
                     "accuracy": accuracy_result.score,
                     "time": time_taken,
-                    "top": self.top
+                    "top": self.top,
                 }
 
     def on_start(self):
@@ -89,14 +89,19 @@ class FinesseUser(HttpUser):
         self.format = self.environment.parsed_options.format
         self.once = self.environment.parsed_options.once
         self.top = self.environment.parsed_options.top
+        settings["engine"] = self.engine
+        settings["format"] = self.format
+        settings["once"] = self.once
+        settings["top"] = self.top
+        settings["path"] = self.path
 
-@events.quitting.add_listener
-def quitting(environment, **_kwargs):
+
+@events.quit.add_listener
+def quit(**_kwargs):
     print("Search accuracy test completed")
     print("Starting bing search test")
-
     update_dict_bing_data(global_test_data)
-    if environment.parsed_options.format == "md":
-        save_to_markdown(global_test_data, environment.parsed_options.engine)
-    elif environment.parsed_options.format == "csv":
-        save_to_csv(global_test_data, environment.parsed_options.engine)
+    if settings.get("format") == "md":
+        save_to_markdown(global_test_data, "azure")
+    elif settings.get("format") == "csv":
+        save_to_csv(global_test_data, settings.get("engine"))
