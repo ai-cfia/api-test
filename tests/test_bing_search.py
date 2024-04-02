@@ -9,7 +9,7 @@ class TestBingSearch(unittest.TestCase):
         subscription_key = os.getenv("BING_SEARCH_KEY")
         bing_search = BingSearch(endpoint, subscription_key)
 
-        query = "Canada Food Inspection Agency"
+        query = "Canadian Food Inspection Agency"
         num_results = 100
 
         urls, elapsed_time = bing_search.search_urls(query, num_results)
