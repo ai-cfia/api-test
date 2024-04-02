@@ -107,8 +107,8 @@ Azure Search and providing an accuracy score for Finesse.
 ### XLSX Converter to JSON 📄
 
 This script converts data from an Excel file (.xlsx) into JSON format. It is
-used for questions generated created by non-developers. It is more readable an
-excel than a json file.
+used for questions generated created by non-developers. Excel files are easier
+to read than JSON files.
 
 ### Usage
 
