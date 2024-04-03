@@ -210,7 +210,7 @@ def update_dict_bing_data(test_data: dict):
     load_dotenv()
     endpoint = os.getenv("BING_ENDPOINT")
     subscription_key = os.getenv("BING_SEARCH_KEY")
-    search_engine = BingSearch(endpoint, subscription_key)
+    search_engine = BingSearch(endpoint, subscription_key, "finesse/cache/")
     count = 1
     for key, value in copy_data.items():
         question = value.get("question")

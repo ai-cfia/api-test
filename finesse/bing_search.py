@@ -2,16 +2,22 @@ from azure.cognitiveservices.search.websearch import WebSearchClient
 from msrest.authentication import CognitiveServicesCredentials
 import time
 import statistics
+from joblib import Memory
+
+
 class BingSearch():
     """
     A class for performing web searches using the Bing Search API.
     """
 
-    def __init__(self, endpoint, subscription_key):
+    def __init__(self, endpoint, subscription_key, cache_dir):
         self.endpoint = endpoint
         self.subscription_key = subscription_key
         self.client = WebSearchClient(endpoint=self.endpoint, credentials=CognitiveServicesCredentials(self.subscription_key))
         self.client.config.base_url = '{Endpoint}/v7.0' # Temporary change to fix the error. Issue opened https://github.com/Azure/azure-sdk-for-python/issues/34917
+        self.cache_dir = cache_dir
+        self.memory = Memory(cache_dir, verbose=0)
+        self.search_urls = self.memory.cache(self.search_urls, ignore=['self'])
 
     def search_urls(self, query: str, num_results: int = 100) -> tuple[list[str], float]:
         """
