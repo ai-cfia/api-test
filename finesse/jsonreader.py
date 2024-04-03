@@ -8,6 +8,7 @@ class JSONReader(Iterator):
     def __init__(self, directory):
         self.directory = directory
         self.file_list = natsorted([f for f in os.listdir(directory) if f.endswith('.json')])
+
         if not self.file_list:
             raise FileNotFoundError(f"No JSON files found in the directory '{directory}'")
         self.current_file_index = 0

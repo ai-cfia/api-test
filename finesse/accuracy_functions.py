@@ -71,6 +71,7 @@ def save_to_markdown(test_data: dict, engine: str):
             else:
                 question = f"[{value.get('question')}]({value.get('expected_page').get('url')})"
             md_file.write(f"| {key} | {question} | {int(value.get('accuracy')*100)}% | {int(value.get('bing_accuracy')*100)}% |{int(value.get('bing_filtered_accuracy')*100)}% |{int(value.get('time'))}ms | {int(value.get('bing_time'))}ms | {int(value.get('bing_filtered_time'))}ms |\n")
+
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
