@@ -48,3 +48,6 @@ output/
 
 # Ignore input of the scripts
 input/
+
+# Ignore the cache directory
+cache/
