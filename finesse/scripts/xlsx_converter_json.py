@@ -15,7 +15,7 @@ INPUT_FOLDER = args.input_folder
 OUTPUT_FOLDER = args.output_folder
 FILE_NAME = args.file_name
 SHEET_NAME = args.sheet_name
-FILE_PATH = INPUT_FOLDER+FILE_NAME
+FILE_PATH = os.path.join(INPUT_FOLDER, FILE_NAME)
 
 workbook = openpyxl.load_workbook(FILE_PATH)
 worksheet = workbook.active
