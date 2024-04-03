@@ -4,6 +4,35 @@ This tool simplifies the process of comparing different search engines and
 assessing their accuracy. It's designed to be straightforward, making it easy to
 understand and use.
 
+## Configuration
+
+Before using the Finesse Locust script, make sure to set up the necessary
+configuration. Follow the steps below:
+
+1. Create a `.env` file in the root directory of the project if it doesn't
+   already exist.
+
+2. Copy the contents of the `.env.template` file and paste them into the `.env`
+   file.
+
+3. Replace the placeholder values in the `.env` file with your actual secrets
+   and configuration settings. In particular, you will need to provide the
+   necessary credentials for the Bing Search API.
+
+## Caching
+
+Finesse supports caching to improve performance and reduce costs. If you already
+have a cache directory from a previous usage, you can reuse it by placing it in
+the `finesse` directory. If you don't have a cache directory, Finesse will
+automatically create one for you.
+
+The cache directory is used to store expensive API requests, so they don't need
+to be repeated unnecessarily. This can significantly speed up subsequent runs of
+the Finesse Locust script.
+
+Make sure that the cache directory has the appropriate read and write
+permissions for the user running the script.
+
 ## How it Works
 
 - **Single command:**
