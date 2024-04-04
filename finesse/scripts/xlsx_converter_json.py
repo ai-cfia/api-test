@@ -52,6 +52,7 @@ if __name__ == "__main__":
             os.makedirs(OUTPUT_FOLDER)
         with open(output_file, 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=4)
+            json_file.write('\n')
         count += 1
 
     print("Conversion completed successfully!")
