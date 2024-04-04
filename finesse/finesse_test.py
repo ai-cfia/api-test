@@ -1,9 +1,11 @@
-from locust import HttpUser, task, events
-from jsonreader import JSONReader
 import os
 import json
+
+from locust import HttpUser, task, events
+
 from accuracy_functions import save_to_markdown, save_to_csv, calculate_accuracy, update_dict_bing_data
 from host import is_host_up
+from jsonreader import JSONReader
 
 global_test_data = dict()
 settings = dict()

@@ -2,12 +2,15 @@ import statistics
 import datetime
 import csv
 import os
-from collections import namedtuple
-import regex as re
-from finesse.bing_search import BingSearch
-from dotenv import load_dotenv
+import re
 
-OUTPUT_FOLDER = "./finesse/output"
+from dotenv import load_dotenv
+from collections import namedtuple
+
+from finesse.bing_search import BingSearch
+
+load_dotenv()
+OUTPUT_FOLDER = os.getenv("OUTPUT_FOLDER","./finesse/output")
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
 
 def calculate_accuracy(responses_url: list[str], expected_url: list | str) -> AccuracyResult:

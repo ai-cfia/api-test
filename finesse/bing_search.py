@@ -1,7 +1,8 @@
-from azure.cognitiveservices.search.websearch import WebSearchClient
-from msrest.authentication import CognitiveServicesCredentials
 import time
 import statistics
+
+from azure.cognitiveservices.search.websearch import WebSearchClient
+from msrest.authentication import CognitiveServicesCredentials
 from joblib import Memory
 
 
