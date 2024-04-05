@@ -137,7 +137,7 @@ def save_to_csv(test_data: dict, engine: str):
     output_file = os.path.join(OUTPUT_FOLDER, file_name)
     with open(output_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["File", "Question", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
+        writer.writerow(["File", "Question", "Links", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
         for key, value in test_data.items():
             question = ""
             if isinstance(value.get("expected_page").get("url"), list):
@@ -148,23 +148,15 @@ def save_to_csv(test_data: dict, engine: str):
                 question = f"[{value.get('question')}]({value.get('expected_page').get('url')})"
             writer.writerow([
                 key,
-                question,
-                f"{int(value.get('accuracy')*100)}%",
-                f"{int(value.get('bing_accuracy')*100)}%",
-                f"{int(value.get('bing_filtered_accuracy')*100)}%",
-                f"{int(value.get('time'))}ms",
-                f"{int(value.get('bing_time'))}ms",
-                f"{int(value.get('bing_filtered_time'))}ms"
+                value.get('question'),
+                f"{int(value.get('accuracy')*100)}",
+                f"{int(value.get('bing_accuracy')*100)}",
+                f"{int(value.get('bing_filtered_accuracy')*100)}",
+                f"{int(value.get('time'))}",
+                f"{int(value.get('bing_time'))}",
+                f"{int(value.get('bing_filtered_time'))}"
             ])
         writer.writerow([])
-
-        time_stats, accuracy_stats, bing_accuracy_stats, bing_time_stats, bing_filtered_accuracy_stats, bing_filtered_time_stats = calculate_statistical_summary(test_data)
-        writer.writerow(["Statistic", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
-        writer.writerow(["Mean", f"{accuracy_stats.get('Mean')}%", f"{bing_accuracy_stats.get('Mean')}%", f"{bing_filtered_accuracy_stats.get('Mean')}%", f"{time_stats.get('Mean')}ms", f"{bing_time_stats.get('Mean')}ms", f"{bing_filtered_time_stats.get('Mean')}ms"])
-        writer.writerow(["Median", f"{accuracy_stats.get('Median')}%", f"{bing_accuracy_stats.get('Median')}%", f"{bing_filtered_accuracy_stats.get('Median')}%", f"{time_stats.get('Median')}ms", f"{bing_time_stats.get('Median')}ms", f"{bing_filtered_time_stats.get('Median')}ms"])
-        writer.writerow(["Standard Deviation", f"{accuracy_stats.get('Standard Deviation')}%", f"{bing_accuracy_stats.get('Standard Deviation')}%", f"{bing_filtered_accuracy_stats.get('Standard Deviation')}%", f"{time_stats.get('Standard Deviation')}ms", f"{bing_time_stats.get('Standard Deviation')}ms", f"{bing_filtered_time_stats.get('Standard Deviation')}ms"])
-        writer.writerow(["Maximum", f"{accuracy_stats.get('Maximum')}%", f"{bing_accuracy_stats.get('Maximum')}%", f"{bing_filtered_accuracy_stats.get('Maximum')}%", f"{time_stats.get('Maximum')}ms", f"{bing_time_stats.get('Maximum')}ms", f"{bing_filtered_time_stats.get('Maximum')}ms"])
-        writer.writerow(["Minimum", f"{accuracy_stats.get('Minimum')}%", f"{bing_accuracy_stats.get('Minimum')}%", f"{bing_filtered_accuracy_stats.get('Minimum')}%", f"{time_stats.get('Minimum')}ms", f"{bing_time_stats.get('Minimum')}ms", f"{bing_filtered_time_stats.get('Minimum')}ms"])
 
 def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict, dict, dict, dict, dict]:
     """

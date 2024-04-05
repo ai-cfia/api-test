@@ -76,9 +76,6 @@ class FinesseUser(HttpUser):
                 "top": self.top,
             }
 
-    def on_start(self):
-        self.qna_reader = JSONReader(self.path)
-
     def on_stop(self):
         if not global_test_data:
             raise NoTestDataError
@@ -95,6 +92,7 @@ class FinesseUser(HttpUser):
         settings["once"] = self.once
         settings["top"] = self.top
         settings["path"] = self.path
+        self.qna_reader = JSONReader(self.path)
 
 
 @events.quit.add_listener
