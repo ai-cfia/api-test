@@ -1,7 +1,7 @@
 locust
-regex
 python-dotenv
 azure-cognitiveservices-search-websearch
 msrest
 openpyxl
 natsort
+joblib

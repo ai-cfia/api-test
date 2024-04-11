@@ -2,12 +2,15 @@ import statistics
 import datetime
 import csv
 import os
-from collections import namedtuple
-import regex as re
-from finesse.bing_search import BingSearch
-from dotenv import load_dotenv
+import re
 
-OUTPUT_FOLDER = "./finesse/output"
+from dotenv import load_dotenv
+from collections import namedtuple
+
+from finesse.bing_search import BingSearch
+
+load_dotenv()
+OUTPUT_FOLDER = os.getenv("OUTPUT_FOLDER","./finesse/output")
 AccuracyResult = namedtuple("AccuracyResult", ["position", "total_pages", "score"])
 
 def calculate_accuracy(responses_url: list[str], expected_url: list | str) -> AccuracyResult:
@@ -50,16 +53,36 @@ def calculate_accuracy(responses_url: list[str], expected_url: list | str) -> Ac
 
     return AccuracyResult(position, total_pages, score)
 
+def count_top_results(test_data, num_results, accuracy_type):
+            """
+            Counts the number of correct URLs in the top results based on the specified accuracy type.
+
+            Args:
+                test_data (dict): A dictionary containing the test data.
+                num_results (int): The number of top results to consider.
+                accuracy_type (str): The type of accuracy to consider ex: "accuracy", "bing_accuracy", or "bing_filtered_accuracy".
+
+            Returns:
+                int: The count of correct URLs in the top results.
+            """
+            count = 0
+            for key, value in test_data.items():
+                accuracy = value.get(accuracy_type)
+                if accuracy > 1.0 - (num_results/100):
+                    count += 1
+            return count
+
 def save_to_markdown(test_data: dict, engine: str):
+
     if not os.path.exists(OUTPUT_FOLDER):
         os.makedirs(OUTPUT_FOLDER)
     date_string = datetime.datetime.now().strftime("%Y-%m-%d")
     file_name = f"test_{engine}_{date_string}.md"
     output_file = os.path.join(OUTPUT_FOLDER, file_name)
     with open(output_file, "w") as md_file:
-        md_file.write(f"# Test on the {engine} search engine: {date_string}\n\n")
+        md_file.write(f"# Test on the {engine.title()} search engine: {date_string}\n\n")
         md_file.write("## Test data table\n\n")
-        md_file.write("| 📄 File | 💬 Question| 🔎 Finesse Accuracy Score | 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛ Finesse Time | ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+        md_file.write(f"| 📄 File | 💬 Question| 🔎 {engine.title()} Accuracy Score | 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛ {engine.title()} Time | ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
         md_file.write("|---|---|---|---|---|---|---|---|\n")
         for key, value in test_data.items():
             question = ""
@@ -77,35 +100,36 @@ def save_to_markdown(test_data: dict, engine: str):
 
         time_stats, accuracy_stats, bing_accuracy_stats, bing_time_stats, bing_filtered_accuracy_stats, bing_filtered_time_stats = calculate_statistical_summary(test_data)
         md_file.write("## Statistical summary\n\n")
-        md_file.write("| Statistic\Engine | 🔎 Finesse Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛  Finesse Time |  ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+        md_file.write(f"| Statistic\Engine | 🔎 {engine.title()} Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛  {engine.title()} Time |  ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+
         md_file.write("|---|---|---|---|---|---|---|\n")
         for stat in ["Mean", "Median", "Standard Deviation", "Maximum", "Minimum"]:
             md_file.write(f"|{stat}| {accuracy_stats.get(stat)}% | {bing_accuracy_stats.get(stat)}% | {bing_filtered_accuracy_stats.get(stat)}% |{time_stats.get(stat)}ms | {bing_time_stats.get(stat)}ms | {bing_filtered_time_stats.get(stat)}ms |\n")
 
-        md_file.write("\n## Count of null and top scores\n\n")
-        md_file.write("| Score\Engine | 🔎 Finesse Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |\n")
+        md_file.write("\n## Count of top results\n\n")
+        md_file.write(f"| Count\Engine | 🔎 {engine.title()} Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |\n")
         md_file.write("|---|---|---|---|\n")
-        finesse_null, finesse_top = count_null_top_scores({key: value.get("accuracy") for key, value in test_data.items()})
-        bing_null, bing_top = count_null_top_scores({key: value.get("bing_accuracy") for key, value in test_data.items()})
-        bing_filtered_null, bing_filtered_top = count_null_top_scores({key: value.get("bing_filtered_accuracy") for key, value in test_data.items()})
+        finesse_top_1 = count_top_results(test_data, 1, "accuracy")
+        bing_top_1 = count_top_results(test_data, 1, "bing_accuracy")
+        bing_filtered_top_1 = count_top_results(test_data, 1, "bing_filtered_accuracy")
+        md_file.write(f"| 🏆 Top 1  | {finesse_top_1} | {bing_top_1} | {bing_filtered_top_1} |\n")
 
-        md_file.write(f"| Null (0%) | {finesse_null} | {bing_null} |{bing_filtered_null} |\n")
-        md_file.write(f"| Top (100%)| {finesse_top} | {bing_top} |{bing_filtered_top} |\n")
+        finesse_top_3 = count_top_results(test_data, 3, "accuracy")
+        bing_top_3 = count_top_results(test_data, 3, "bing_accuracy")
+        bing_filtered_top_3 = count_top_results(test_data, 3, "bing_filtered_accuracy")
+        md_file.write(f"| ✅ Top 3  | {finesse_top_3} | {bing_top_3} | {bing_filtered_top_3} |\n")
 
-def count_null_top_scores(accuracy_scores: dict):
-    """
-    Counts the number of null scores and top scores in the given accuracy_scores dictionary.
+        finesse_top_5 = count_top_results(test_data, 5, "accuracy")
+        bing_top_5 = count_top_results(test_data, 5, "bing_accuracy")
+        bing_filtered_top_5 = count_top_results(test_data, 5, "bing_filtered_accuracy")
+        md_file.write(f"|✅ Top 5 | {finesse_top_5} | {bing_top_5} | {bing_filtered_top_5} |\n")
 
-    Args:
-        accuracy_scores (dict): A dictionary containing accuracy scores.
+        finesse_top_10 = count_top_results(test_data, 10, "accuracy")
+        bing_top_10 = count_top_results(test_data, 10, "bing_accuracy")
+        bing_filtered_top_10 = count_top_results(test_data, 10, "bing_filtered_accuracy")
+        md_file.write(f"|✅ Top 10 | {finesse_top_10} | {bing_top_10} | {bing_filtered_top_10} |\n")
 
-    Returns:
-        tuple: A tuple containing the count of null scores and top scores, respectively.
-    """
-    null_scores = len([score for score in accuracy_scores.values() if score == 0])
-    top_scores = len([score for score in accuracy_scores.values() if score == 1])
-
-    return null_scores, top_scores
+        md_file.write(f"| ❌ Not in top 10  | {len(test_data) - finesse_top_10} | {len(test_data) - bing_top_10} | {len(test_data) - bing_filtered_top_10} |\n")
 
 def save_to_csv(test_data: dict, engine: str):
     if not os.path.exists(OUTPUT_FOLDER):
@@ -115,7 +139,7 @@ def save_to_csv(test_data: dict, engine: str):
     output_file = os.path.join(OUTPUT_FOLDER, file_name)
     with open(output_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["File", "Question", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
+        writer.writerow(["File", "Question", "Links", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
         for key, value in test_data.items():
             question = ""
             if isinstance(value.get("expected_page").get("url"), list):
@@ -126,23 +150,15 @@ def save_to_csv(test_data: dict, engine: str):
                 question = f"[{value.get('question')}]({value.get('expected_page').get('url')})"
             writer.writerow([
                 key,
-                question,
-                f"{int(value.get('accuracy')*100)}%",
-                f"{int(value.get('bing_accuracy')*100)}%",
-                f"{int(value.get('bing_filtered_accuracy')*100)}%",
-                f"{int(value.get('time'))}ms",
-                f"{int(value.get('bing_time'))}ms",
-                f"{int(value.get('bing_filtered_time'))}ms"
+                value.get('question'),
+                f"{int(value.get('accuracy')*100)}",
+                f"{int(value.get('bing_accuracy')*100)}",
+                f"{int(value.get('bing_filtered_accuracy')*100)}",
+                f"{int(value.get('time'))}",
+                f"{int(value.get('bing_time'))}",
+                f"{int(value.get('bing_filtered_time'))}"
             ])
         writer.writerow([])
-
-        time_stats, accuracy_stats, bing_accuracy_stats, bing_time_stats, bing_filtered_accuracy_stats, bing_filtered_time_stats = calculate_statistical_summary(test_data)
-        writer.writerow(["Statistic", "Finesse Accuracy Score", "Bing Accuracy Score", "Filtered Bing Accuracy Score", "Finesse Time", "Bing Time", "Filtered Bing Time"])
-        writer.writerow(["Mean", f"{accuracy_stats.get('Mean')}%", f"{bing_accuracy_stats.get('Mean')}%", f"{bing_filtered_accuracy_stats.get('Mean')}%", f"{time_stats.get('Mean')}ms", f"{bing_time_stats.get('Mean')}ms", f"{bing_filtered_time_stats.get('Mean')}ms"])
-        writer.writerow(["Median", f"{accuracy_stats.get('Median')}%", f"{bing_accuracy_stats.get('Median')}%", f"{bing_filtered_accuracy_stats.get('Median')}%", f"{time_stats.get('Median')}ms", f"{bing_time_stats.get('Median')}ms", f"{bing_filtered_time_stats.get('Median')}ms"])
-        writer.writerow(["Standard Deviation", f"{accuracy_stats.get('Standard Deviation')}%", f"{bing_accuracy_stats.get('Standard Deviation')}%", f"{bing_filtered_accuracy_stats.get('Standard Deviation')}%", f"{time_stats.get('Standard Deviation')}ms", f"{bing_time_stats.get('Standard Deviation')}ms", f"{bing_filtered_time_stats.get('Standard Deviation')}ms"])
-        writer.writerow(["Maximum", f"{accuracy_stats.get('Maximum')}%", f"{bing_accuracy_stats.get('Maximum')}%", f"{bing_filtered_accuracy_stats.get('Maximum')}%", f"{time_stats.get('Maximum')}ms", f"{bing_time_stats.get('Maximum')}ms", f"{bing_filtered_time_stats.get('Maximum')}ms"])
-        writer.writerow(["Minimum", f"{accuracy_stats.get('Minimum')}%", f"{bing_accuracy_stats.get('Minimum')}%", f"{bing_filtered_accuracy_stats.get('Minimum')}%", f"{time_stats.get('Minimum')}ms", f"{bing_time_stats.get('Minimum')}ms", f"{bing_filtered_time_stats.get('Minimum')}ms"])
 
 def calculate_statistical_summary(test_data: dict) -> tuple[dict, dict, dict, dict, dict, dict]:
     """
@@ -211,7 +227,9 @@ def update_dict_bing_data(test_data: dict):
     load_dotenv()
     endpoint = os.getenv("BING_ENDPOINT")
     subscription_key = os.getenv("BING_SEARCH_KEY")
-    search_engine = BingSearch(endpoint, subscription_key)
+    cache_path = os.getenv("CACHE_PATH", "finesse/cache/")
+    search_engine = BingSearch(endpoint, subscription_key, cache_path)
+
     count = 1
     for key, value in copy_data.items():
         question = value.get("question")

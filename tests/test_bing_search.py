@@ -7,7 +7,8 @@ class TestBingSearch(unittest.TestCase):
         load_dotenv()
         endpoint = os.getenv("BING_ENDPOINT")
         subscription_key = os.getenv("BING_SEARCH_KEY")
-        bing_search = BingSearch(endpoint, subscription_key)
+        cache_path = os.getenv("CACHE_PATH", "finesse/cache/")
+        bing_search = BingSearch(endpoint, subscription_key, cache_path)
 
         query = "Canadian Food Inspection Agency"
         num_results = 100

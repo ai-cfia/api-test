@@ -1,9 +1,11 @@
-from locust import HttpUser, task, events
-from jsonreader import JSONReader
 import os
 import json
+
+from locust import HttpUser, task, events
+
 from accuracy_functions import save_to_markdown, save_to_csv, calculate_accuracy, update_dict_bing_data
 from host import is_host_up
+from jsonreader import JSONReader
 
 global_test_data = dict()
 settings = dict()
@@ -45,38 +47,34 @@ class FinesseUser(HttpUser):
                 print("Stopping the running test")
                 self.environment.runner.quit()
 
-        if self.engine in ["ai-lab", "azure", "static"]:
-            question = json_data.get("question")
-            expected_url = json_data.get("url")
-            file_name = self.qna_reader.file_name
-            response_url : list[str] = []
-            search_url = f"{self.host}/search/{self.engine}?top={self.top}"
-            data = json.dumps({'query': f'{question}'})
-            headers = { "Content-Type": "application/json" }
-            response = self.client.post(search_url, data=data, headers=headers)
+        question = json_data.get("question")
+        expected_url = json_data.get("url")
+        file_name = self.qna_reader.file_name
+        response_url : list[str] = []
+        search_url = f"{self.host}/search/{self.engine}?top={self.top}"
+        data = json.dumps({'query': f'{question}'})
+        headers = { "Content-Type": "application/json" }
+        response = self.client.post(search_url, data=data, headers=headers)
 
-            if response.status_code == 200:
-                response_pages = response.json()
-                for page in response_pages:
-                    response_url.append(page.get("url"))
-                accuracy_result = calculate_accuracy(response_url, expected_url)
-                time_taken = round(response.elapsed.total_seconds()*1000,3)
-                expected_page = json_data.copy()
-                del expected_page['question']
-                del expected_page['answer']
-                global_test_data[file_name] = {
-                    "question": question,
-                    "expected_page": expected_page,
-                    "response_pages": response_pages,
-                    "position": accuracy_result.position,
-                    "total_pages": accuracy_result.total_pages,
-                    "accuracy": accuracy_result.score,
-                    "time": time_taken,
-                    "top": self.top,
-                }
-
-    def on_start(self):
-        self.qna_reader = JSONReader(self.path)
+        if response.status_code == 200:
+            response_pages = response.json()
+            for page in response_pages:
+                response_url.append(page.get("url"))
+            accuracy_result = calculate_accuracy(response_url, expected_url)
+            time_taken = round(response.elapsed.total_seconds()*1000, 3)
+            expected_page = json_data.copy()
+            del expected_page['question']
+            del expected_page['answer']
+            global_test_data[file_name] = {
+                "question": question,
+                "expected_page": expected_page,
+                "response_pages": response_pages,
+                "position": accuracy_result.position,
+                "total_pages": accuracy_result.total_pages,
+                "accuracy": accuracy_result.score,
+                "time": time_taken,
+                "top": self.top,
+            }
 
     def on_stop(self):
         if not global_test_data:
@@ -94,7 +92,7 @@ class FinesseUser(HttpUser):
         settings["once"] = self.once
         settings["top"] = self.top
         settings["path"] = self.path
-
+        self.qna_reader = JSONReader(self.path)
 
 @events.quit.add_listener
 def quit(**_kwargs):
@@ -102,6 +100,6 @@ def quit(**_kwargs):
     print("Starting bing search test")
     update_dict_bing_data(global_test_data)
     if settings.get("format") == "md":
-        save_to_markdown(global_test_data, "azure")
+        save_to_markdown(global_test_data,  settings.get("engine"))
     elif settings.get("format") == "csv":
         save_to_csv(global_test_data, settings.get("engine"))
