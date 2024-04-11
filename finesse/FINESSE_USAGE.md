@@ -99,7 +99,7 @@ sequenceDiagram
   finesse-test-->>User: Display results
 ```
 
-## Example Command
+## Example Command for Locust Script
 
 ```cmd
 $locust -f finesse/finesse_test.py --engine azure --path finesse/QnA/sorted-2024-02-22/  --host https://finesse.inspection.alpha.canada.ca/api --once
@@ -155,7 +155,7 @@ to read than JSON files.
 4. **Worksheet Name**: Specify the name of the worksheet containing the data
    using the `--sheet-name` argument. By default, it is set to `'To fill'`.
 
-### Example Command
+### Example Command for XLSX Converter Script
 
 ```bash
 python finesse/scripts/xlsx_converter_json.py --input-folder finesse/scripts/input/ --output-folder finesse/scripts/output/ --file-name Finesse_questions_for_testing.xlsx --sheet-name "To fill"
