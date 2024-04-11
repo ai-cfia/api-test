@@ -49,5 +49,6 @@ output/
 # Ignore input of the scripts
 input/
 
-# Ignore the generated files from cache
+
+# Ignore the cache directory
 cache/

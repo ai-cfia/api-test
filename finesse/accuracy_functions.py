@@ -94,12 +94,14 @@ def save_to_markdown(test_data: dict, engine: str):
             else:
                 question = f"[{value.get('question')}]({value.get('expected_page').get('url')})"
             md_file.write(f"| {key} | {question} | {int(value.get('accuracy')*100)}% | {int(value.get('bing_accuracy')*100)}% |{int(value.get('bing_filtered_accuracy')*100)}% |{int(value.get('time'))}ms | {int(value.get('bing_time'))}ms | {int(value.get('bing_filtered_time'))}ms |\n")
+
         md_file.write("\n")
         md_file.write(f"Tested on {len(test_data)} files.\n\n")
 
         time_stats, accuracy_stats, bing_accuracy_stats, bing_time_stats, bing_filtered_accuracy_stats, bing_filtered_time_stats = calculate_statistical_summary(test_data)
         md_file.write("## Statistical summary\n\n")
         md_file.write(f"| Statistic\Engine | 🔎 {engine.title()} Accuracy score| 🌐 Bing Accuracy Score | 🌐 Filtered Bing Accuracy Score |⌛  {engine.title()} Time |  ⌛ Bing Time | ⌛ Filtered Bing Time |\n")
+
         md_file.write("|---|---|---|---|---|---|---|\n")
         for stat in ["Mean", "Median", "Standard Deviation", "Maximum", "Minimum"]:
             md_file.write(f"|{stat}| {accuracy_stats.get(stat)}% | {bing_accuracy_stats.get(stat)}% | {bing_filtered_accuracy_stats.get(stat)}% |{time_stats.get(stat)}ms | {bing_time_stats.get(stat)}ms | {bing_filtered_time_stats.get(stat)}ms |\n")
@@ -227,6 +229,7 @@ def update_dict_bing_data(test_data: dict):
     subscription_key = os.getenv("BING_SEARCH_KEY")
     cache_path = os.getenv("CACHE_PATH", "finesse/cache/")
     search_engine = BingSearch(endpoint, subscription_key, cache_path)
+
     count = 1
     for key, value in copy_data.items():
         question = value.get("question")

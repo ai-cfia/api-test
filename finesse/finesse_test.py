@@ -94,7 +94,6 @@ class FinesseUser(HttpUser):
         settings["path"] = self.path
         self.qna_reader = JSONReader(self.path)
 
-
 @events.quit.add_listener
 def quit(**_kwargs):
     print("Search accuracy test completed")

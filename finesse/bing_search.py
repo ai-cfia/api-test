@@ -5,7 +5,6 @@ from azure.cognitiveservices.search.websearch import WebSearchClient
 from msrest.authentication import CognitiveServicesCredentials
 from joblib import Memory
 
-
 class BingSearch():
     """
     A class for performing web searches using the Bing Search API.
