@@ -1,8 +1,8 @@
 # How to use the Finesse Locust script
 
 This tool simplifies the process of comparing different search engines and
-assessing their accuracy. It's designed to be straightforward, making it easy
-to understand and use.
+assessing their accuracy. It's designed to be straightforward, making it easy to
+understand and use.
 
 ## How it Works
 
@@ -16,8 +16,8 @@ to understand and use.
       - `static`: Static search engine
       - `llamaindex`: LlamaIndex search engine
     - `--path [directory path]`: Point to the directory with files structured
-    - `--host [API URL]`: Point to the finesse-backend URL
-      with JSON files with the following properties:
+    - `--host [API URL]`: Point to the finesse-backend URL with JSON files with
+      the following properties:
       - `score`: The score of the page.
       - `crawl_id`: The unique identifier associated with the crawl table.
       - `chunk_id`: The unique identifier of the chunk.
@@ -43,7 +43,8 @@ to understand and use.
 - **Round trip time**
   - Measure round trip time of each request
 - **Summary statistical value**
-  - Measure the average, median, standard deviation, minimum and maximal accuracy scores and round trip time
+  - Measure the average, median, standard deviation, minimum and maximal
+    accuracy scores and round trip time
 
 ## Diagram
 
@@ -100,3 +101,49 @@ Accuracy statistical summary:
 
 This example shows how the CLI Output of the tool, analyzing search results from
 Azure Search and providing an accuracy score for Finesse.
+
+## Scripts
+
+### XLSX Converter to JSON 📄
+
+This script converts data from an Excel file (.xlsx) into JSON format. It is
+used for questions generated created by non-developers. Excel files are easier
+to read than JSON files.
+
+### Usage
+
+1. **Input Excel File**: Place the Excel file containing the data in the
+   specified input folder (`--input-folder`). By default, the input folder is
+   set to `'finesse/scripts/input/'`.
+
+2. **Output Folder**: Specify the folder where the resulting JSON files will be
+   saved using the `--output-folder` argument. By default, the output folder is
+   set to `'finesse/scripts/output/'`.
+
+3. **Input File Name**: Provide the name of the input Excel file using the
+   `--file-name` argument..
+
+4. **Worksheet Name**: Specify the name of the worksheet containing the data
+   using the `--sheet-name` argument. By default, it is set to `'To fill'`.
+
+### Example Command
+
+```bash
+python finesse/scripts/xlsx_converter_json.py --input-folder finesse/scripts/input/ --output-folder finesse/scripts/output/ --file-name Finesse_questions_for_testing.xlsx --sheet-name "To fill"
+```
+
+Replace `'example.xlsx'` with the actual name of your input Excel file and
+`'Sheet1'` with the name of the worksheet containing the data.
+
+### Output
+
+The script generates individual JSON files for each row of data in the specified
+output folder. Each JSON file contains the following fields:
+
+- `question`: The question extracted from the Excel file.
+- `answer`: The answer extracted from the Excel file.
+- `title`: The title(s) extracted from specified columns in the Excel file.
+- `url`: The URL(s) extracted from specified columns in the Excel file.
+
+Upon completion, the script prints "Conversion terminée !" (Conversion
+completed!) to indicate that the conversion process is finished.

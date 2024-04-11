@@ -2,9 +2,11 @@ from locust import HttpUser, task, events
 from jsonreader import JSONReader
 import os
 import json
-from accuracy_functions import save_to_markdown, save_to_csv, log_data, calculate_accuracy
+from accuracy_functions import save_to_markdown, save_to_csv, calculate_accuracy, update_dict_bing_data
 from host import is_host_up
 
+global_test_data = dict()
+settings = dict()
 class NoTestDataError(Exception):
     """Raised when all requests have failed and there is no test data"""
 
@@ -58,12 +60,11 @@ class FinesseUser(HttpUser):
                 for page in response_pages:
                     response_url.append(page.get("url"))
                 accuracy_result = calculate_accuracy(response_url, expected_url)
-                time_taken = round(response.elapsed.microseconds/1000,3)
-
+                time_taken = round(response.elapsed.total_seconds()*1000,3)
                 expected_page = json_data.copy()
                 del expected_page['question']
                 del expected_page['answer']
-                self.qna_results[file_name] = {
+                global_test_data[file_name] = {
                     "question": question,
                     "expected_page": expected_page,
                     "response_pages": response_pages,
@@ -71,21 +72,15 @@ class FinesseUser(HttpUser):
                     "total_pages": accuracy_result.total_pages,
                     "accuracy": accuracy_result.score,
                     "time": time_taken,
+                    "top": self.top,
                 }
 
     def on_start(self):
         self.qna_reader = JSONReader(self.path)
-        self.qna_results = dict()
 
     def on_stop(self):
-        if not self.qna_results:
+        if not global_test_data:
             raise NoTestDataError
-
-        log_data(self.qna_results)
-        if self.format == "md":
-            save_to_markdown(self.qna_results, self.engine)
-        elif self.format == "csv":
-            save_to_csv(self.qna_results, self.engine)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,3 +89,19 @@ class FinesseUser(HttpUser):
         self.format = self.environment.parsed_options.format
         self.once = self.environment.parsed_options.once
         self.top = self.environment.parsed_options.top
+        settings["engine"] = self.engine
+        settings["format"] = self.format
+        settings["once"] = self.once
+        settings["top"] = self.top
+        settings["path"] = self.path
+
+
+@events.quit.add_listener
+def quit(**_kwargs):
+    print("Search accuracy test completed")
+    print("Starting bing search test")
+    update_dict_bing_data(global_test_data)
+    if settings.get("format") == "md":
+        save_to_markdown(global_test_data, "azure")
+    elif settings.get("format") == "csv":
+        save_to_csv(global_test_data, settings.get("engine"))

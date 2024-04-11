@@ -43,5 +43,11 @@ flask_session/
 # Ignore local QnA json files
 QnA
 
-# Ignore output of api-test
-output
+# Ignore output of api-test and from the scripts
+output/
+
+# Ignore input of the scripts
+input/
+
+# Ignore the cache directory
+cache/
