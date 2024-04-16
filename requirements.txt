@@ -1,6 +1,8 @@
 locust
 python-dotenv
 azure-cognitiveservices-search-websearch
+azure-storage-blob
+azure-identity
 msrest
 openpyxl
 natsort
