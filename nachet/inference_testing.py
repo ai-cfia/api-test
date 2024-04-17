@@ -1,7 +1,6 @@
 import openpyxl
 import base64
 import requests
-import json
 
 
 def start_testing(amount: int, data: list, backend_url: str, models: list[str]) -> dict:
@@ -18,28 +17,28 @@ def start_testing(amount: int, data: list, backend_url: str, models: list[str]) 
         dict: A dictionary containing the results of the testing process.
     """
 
-    images_to_test = [ base64.b64encode(blob).decode("utf8") for blob in data[:amount]]
+    images_to_test = [base64.b64encode(blob).decode("utf8") for blob in data[:amount]]
 
     for img in images_to_test:
         for model in models:
-            paylaoad = {
-                "model_name":model,
+            payload = {
+                "model_name": model,
                 "validator": "nachet_testing_image",
                 "folder_name": "api_test_nachet",
                 "container_name": "testing-images",
                 "imageDims": [100, 100],
-                "image": img
+                "image": "data:image/PNG;base64," + img
             }
 
-            headers={
+            headers = {
                     "Content-Type": "application/json",
                     "Access-Control-Allow-Origin": "*",
-                },
+                }
 
-            response = requests.post(backend_url + "/inf", json=paylaoad, headers=headers)
+            response = requests.post(backend_url + "/inf", json=payload, headers=headers).json()
             result = response.json()
 
-            print()
+            print("ici")
 
 def test_inference(image: str, backend_url: str) -> dict:
     pass

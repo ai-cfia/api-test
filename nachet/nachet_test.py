@@ -28,10 +28,11 @@ def format_list_env():
 
 def app_initialisation():
     url = NACHET_BACKEND_URL + "/model-endpoints-metadata"
-    response = requests.get(url)
+    response = requests.get(url).json()
+    models = [m.get("model_name") for m in response]
     seeds_name, testing_folders = format_list_env()
     bsc = get_blob_client(AZURE_STORAGE_CONNECTION_STRING)
-    return seeds_name, testing_folders, bsc, NACHET_BACKEND_URL
+    return seeds_name, testing_folders, models, bsc, NACHET_BACKEND_URL
 
 
 def main():

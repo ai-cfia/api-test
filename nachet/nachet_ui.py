@@ -4,20 +4,24 @@ import sys
 from datastore import get_testing_image
 from inference_testing import start_testing
 
-CACHE = {}
+CACHE = {
+    "blob_image": {}
+}
 
 
 def test_image(seed: str):
     clear()
     print("Start loading images")
-    if not CACHE.get("blob_image"):
-        seconds = time.perf_counter()
-        CACHE["blob_image"] = get_testing_image(
+    seconds = time.perf_counter()
+
+    if not CACHE.get("blob_image").get(seed):
+        CACHE["blob_image"][seed] = get_testing_image(
             CACHE["testing_folders"][0],
             CACHE["DATASTORE_CLIENT"],
             seed,
         )
-    print("Finish Loading image")
+
+    print(f"Finish loading {len(CACHE['blob_image'][seed])} images")
     print(f"Took: {'{:10.4f}'.format(time.perf_counter() - seconds)} seconds")
 
     amount = input(
@@ -29,7 +33,7 @@ Enter the number of image you want to test the models against:
 
     _ = input("Enter any key to start testing")
 
-    start_testing(nb_image, CACHE["blob_image"], CACHE["NACHET_BACKEND_URL"], CACHE["DATASTORE_CLIENT"])
+    start_testing(nb_image, CACHE["blob_image"][seed], CACHE["NACHET_BACKEND_URL"], CACHE["MODELS"])
 
     #actions[4](0)
 
@@ -51,8 +55,9 @@ def menu(*args):
     if args:
         CACHE["seeds_name"] = args[0]
         CACHE["testing_folders"] = args[1]
-        CACHE["DATASTORE_CLIENT"] = args[2]
-        CACHE["NACHET_BACKEND_URL"] = args[3]
+        CACHE["MODELS"] = args[2]
+        CACHE["DATASTORE_CLIENT"] = args[3]
+        CACHE["NACHET_BACKEND_URL"] = args[4]
 
     print("Welcome to nachet testing app!")
     for i, seed in enumerate(CACHE["seeds_name"]):
