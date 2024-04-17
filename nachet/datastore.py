@@ -1,33 +1,10 @@
-import os
-import time
-import re
-
 from concurrent.futures import ThreadPoolExecutor
 
-from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient, ContainerClient
-from azure.core.exceptions import ResourceNotFoundError
-
-
-load_dotenv()
-
-# Environment variable
-AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-SEEDS_NAME = os.getenv("SEEDS_NAME")
-TESTING_FOLDERS = os.getenv("TESTING_FOLDERS")
 
 
 class DatastoreErrors(Exception):
     pass
-
-def format_list_env():
-    """
-    Format the list of environment variable for the seeds name and testing
-    folders.
-    """
-    seeds_name = [name.strip() for name in SEEDS_NAME.split(',')]
-    testing_folders = [name.strip() for name in TESTING_FOLDERS.split(',')]
-    return seeds_name, testing_folders
 
 
 def get_blob_client(connection: str) -> BlobServiceClient:
@@ -51,51 +28,52 @@ def get_blob_client(connection: str) -> BlobServiceClient:
         raise DatastoreErrors("could not retrieve the blob client") from error
 
 
-
-def get_testing_image(amount: int, blob_path: str,
+def get_testing_image(blob_path: str,
     blob_service_client: BlobServiceClient,
-    seed_name: list[str], key_word: str = "testing") -> list[str]:
+    seed_name: str, key_word: str = "testing") -> list[str]:
     """
-    2024-taran-verified-seedid
+    Get the blobs of testing images from Azure Blob Storage.
+
+    Args:
+        blob_path (str): The path to the blob containers.
+        blob_service_client (BlobServiceClient): The BlobServiceClient object.
+        seed_name (list[str]): A list of seed names.
+        key_word (str, optional): The keyword to filter the blob names. Defaults to "testing".
+
+    Returns:
+        list[str]: A dictionary containing the seed names as keys and the corresponding image blobs as values.
     """
 
     def get_blob_urls(container: ContainerClient) -> list[str]:
         """
+        Get the blobs in a container.
+
+        Args:
+            container (ContainerClient): The ContainerClient object.
+
+        Returns:
+            list: A list of blob.
         """
+
         return [
-            container.get_blob_client(name).url
-            for name in container.list_blob_names()
-            if key_word in name
+            container.get_blob_client(blob.name).download_blob().readall()
+            for blob in container.list_blobs()
+            if seed_name in blob.name and key_word in blob.name
         ]
 
     container_list = blob_service_client.list_containers(name_starts_with=blob_path)
     containers = [blob_service_client.get_container_client(c.name) for c in container_list]
 
     with ThreadPoolExecutor() as executor:
-        img_url = sum(executor.map(get_blob_urls, containers), [])
+        images = sum(executor.map(get_blob_urls, containers), [])
 
-    seed_testing = {
-        seed: [url for url in img_url if seed.split(" ")[1] in url]
-        for seed in seed_name
-    }
-
-    # Divide the amount per seed to select a number of image to test the models with
-    nb_image_per_seed = round(amount / len(seed_name))
-
-    print(seed_testing[seed_name[0]])
-
-    print(seed_name[0])
-
-    return seed_testing
+    return images
 
 
-def get_user_image(amount: int, blob_path: list[str],
-                   blob_service_client: BlobServiceClient) -> list[str]:
+def get_user_image(blob_path: list[str],
+    blob_service_client: BlobServiceClient,
+    seed_name: list[str], key_word: str = "user") -> list[str]:
     pass
 
-if __name__ == "__main__":
-    seconds = time.perf_counter()
-    seeds_name, testing_folders = format_list_env()
-    bsc = get_blob_client(AZURE_STORAGE_CONNECTION_STRING)
-    get_testing_image(55, testing_folders[1], bsc, seeds_name)
-    print(f"Took: {'{:10.4f}'.format(time.perf_counter() - seconds)} seconds")
+def get_image_from_folder(blob_path: str) -> list[str]:
+    pass
