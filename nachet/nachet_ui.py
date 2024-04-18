@@ -1,5 +1,7 @@
 import time
 import sys
+import openpyxl
+import json
 
 from datastore import get_testing_image
 from inference_testing import start_testing
@@ -33,9 +35,18 @@ Enter the number of image you want to test the models against:
 
     _ = input("Enter any key to start testing")
 
-    start_testing(nb_image, CACHE["blob_image"][seed], CACHE["NACHET_BACKEND_URL"], CACHE["MODELS"])
+    clear()
+    print("Start testing images")
+    seconds = time.perf_counter()
+    results = start_testing(nb_image, CACHE["blob_image"][seed], CACHE["NACHET_BACKEND_URL"], CACHE["MODELS"])
+    print(f"Took: {'{:10.4f}'.format(time.perf_counter() - seconds)} seconds")
 
-    #actions[4](0)
+    with open(f"results_{seed}.txt", "w+") as f:
+        f.write(json.dumps(results, indent=4))
+
+    save_to_workbook(results, seed)
+
+    print("Results saved to workbook")
 
 
 def user_image(seed: str):
@@ -47,6 +58,23 @@ def folder_specific_image(seed: str):
     clear()
     print("not implement yet")
     menu()
+
+def save_to_workbook(results: dict, seed: str):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    for model, result in results.items():
+        ws.append([model])
+        ws.append(["Image", "Labels", "TopN", "time"])
+
+        for key, value in result.items():
+            ws.append([key, value["request_time"]])
+            for i in range(value["nb_seeds"]):
+                ws.append([value["labels"][i], value["topN"][i]])
+
+    wb.save(f"results_{seed}.xlsx")
+
+    print(f"Results saved in results_{seed}.xlsx")
 
 def clear():
     sys.stdout.write("\033[H\033[J")
