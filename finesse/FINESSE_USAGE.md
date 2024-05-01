@@ -12,12 +12,19 @@ configuration. Follow the steps below:
 1. Create a `.env` file in the root directory of the project if it doesn't
    already exist.
 
-2. Copy the contents of the `.env.template` file and paste them into the `.env`
+1. Copy the contents of the `.env.template` file and paste them into the `.env`
    file.
 
-3. Replace the placeholder values in the `.env` file with your actual secrets
+1. Replace the placeholder values in the `.env` file with your actual secrets
    and configuration settings. In particular, you will need to provide the
    necessary credentials for the Bing Search API.
+
+1. Add a cache repository
+
+1. Copy the QnA repository in finesse-data locally, inside the command specify
+the path with the --path argument.
+
+1. Copy the command in example command
 
 ## Caching
 
@@ -102,7 +109,7 @@ sequenceDiagram
 ## Example Command for Locust Script
 
 ```cmd
-$locust -f finesse/finesse_test.py --engine azure --path finesse/QnA/sorted-2024-02-22/  --host https://finesse.inspection.alpha.canada.ca/api --once
+$locust -f finesse/finesse_test.py --once --headless --engine azure --path finesse/QnA/user-generated/ --host https://finesse.inspection.alpha.canada.ca/api
 Searching with Azure Search...
 
 File: qna_2023-12-08_36.json
