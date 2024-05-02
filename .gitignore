@@ -44,7 +44,7 @@ flask_session/
 QnA/
 
 # Ignore output of api-test and from the scripts
-output/
+# output/
 
 # Ignore input of the scripts
 input/
