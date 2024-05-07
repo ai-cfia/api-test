@@ -29,7 +29,7 @@ def calculate_accuracy(responses_url: list[str], expected_url: list | str) -> Ac
     score: float = 0.0
     expected_url_ids = []
 
-    PATTERN = r'/[a-z]{3}/[0-9]+/[0-9]+$'
+    PATTERN = r'/[a-z]{3}/\d+/\d+'
     if isinstance(expected_url, list):
         for url in expected_url:
             if url.startswith("https://inspection.canada.ca"):
