@@ -27,23 +27,23 @@ def calculate_accuracy(responses_url: list[str], expected_url: list | str) -> Ac
     position: int = 0
     total_pages: int = len(responses_url)
     score: float = 0.0
-    expected_number = []
+    expected_url_ids = []
 
-    PATTERN = r'/(\d+)/'
+    PATTERN = r'/[a-z]{3}/[0-9]+/[0-9]+$'
     if isinstance(expected_url, list):
         for url in expected_url:
             if url.startswith("https://inspection.canada.ca"):
-                number = int(re.findall(PATTERN, url)[0])
-                expected_number.append(number)
+                url_id = re.findall(PATTERN, url)[0]
+                expected_url_ids.append(url_id)
     elif isinstance(expected_url, str) and expected_url.startswith("https://inspection.canada.ca"):
-        number = int(re.findall(PATTERN, expected_url)[0])
-        expected_number.append(number)
+        url_id = re.findall(PATTERN, expected_url)[0]
+        expected_url_ids.append(url_id)
 
     for idx, response_url in enumerate(responses_url):
         if response_url.startswith("https://inspection.canada.ca"):
             try:
-                response_number = int(re.findall(PATTERN, response_url)[0])
-                if response_number in expected_number:
+                response_url_id = re.findall(PATTERN, response_url)[0]
+                if response_url_id in expected_url_ids:
                     position = idx
                     score = 1 - (position / total_pages)
                     score= round(score, 2)
